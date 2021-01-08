@@ -17,30 +17,22 @@ namespace DoodleJump
             Console.ReadLine();
         }
     }
-                    //##############     #####################################
-                    //##############     #####################################
-                    //###                #####################################
-                    //###                #####################################
-                    //###        ###     #####################################
-                    //###        ###     #####################################
-                    //##############     #####################################
-                    //##############     #####################################
-                    
     static class Game
     {
         //
         public const int hightOfJump = 4;
-        //public const int hightOfFall = -9;
         public static int checkOfHight = 0;
+
+        public static int plateNow;
+        public static int platePrevious;
+
         static bool isGameOver = false;
         //
         public static void Start()
         {
             Console.OutputEncoding = Encoding.UTF8;
-            //строка 120 символов
-            //поле 30 символов
-            // U+07DB
-            bool flag = false;
+
+            bool isFildJump = false;
             bool isJump = false;
 
             Random random = new Random();
@@ -51,11 +43,13 @@ namespace DoodleJump
 
             Plate[] plates = new Plate[15];
             Plate[] dopPlates = new Plate[6];
+            platePrevious = plates.Length - 1;
+            plateNow = platePrevious;
 
             // СПАВН НА СТАРТЕ
             for (int i = 0; i < 30; i += 2) // заполнение памяти 15 платформ
             {
-                int x = random.Next(4, 24);
+                int x = random.Next(4, 14);
                 int texture = random.Next(0, 3);
                 int y = i;
                 int direction = random.Next(0, 2);
@@ -63,19 +57,22 @@ namespace DoodleJump
                 plate.Spawn(x, y, texture, direction);
                 plates[i / 2] = plate;
 
-                if (i == 28)
+                if (i == 14)
                 {
                     playerX = x;
-                    playerY = 27;
+                    playerY = 13;
                 }
             }
 
             Player player = new Player(playerX, playerY);
             player.Set();
 
+
+
+            //игра. обновление экрана => сама игра
             while (!isGameOver)
             {
-                Thread.Sleep(100);
+                Thread.Sleep(50);
                 Console.Clear();
                 if (Console.KeyAvailable == true)
                 {
@@ -86,49 +83,76 @@ namespace DoodleJump
                 bool isIntersect = false;
                 for (int j = 0; j < plates.Length; j++)
                 {
-                    if (plates[j].Intersect(player.X, player.Y + 1))
+                    if (plates[j].Intersect(player.X, player.Y + 1, checkOfHight))
                     {
+                        plateNow = j;
                         isIntersect = true;
+                        if (plateNow == platePrevious)
+                        {
+                            isFildJump = false;
+                        }
+                        else
+                        {
+                            isFildJump = false;
+                        }
                         break;
                     }
                 }
-                if (isIntersect && isJump == false)
+                if (!isFildJump)
                 {
-                    Movement.jumpA(player);
-                    checkOfHight++;
-                    if (checkOfHight >= hightOfJump)
-                    {
-                        checkOfHight = -1;
-                        isJump = !isJump;
-                    }
-                }
-                else if (checkOfHight > 0)
-                {
-                    Movement.jumpA(player);
-                    checkOfHight++;
-                    if (checkOfHight >= hightOfJump)
-                    {
-                        checkOfHight = -1;
-                        isJump = !isJump;
-                    }
-                }
-                else if (checkOfHight < 0 || !isIntersect)
-                {
-                    if (isIntersect)
+                    if (isIntersect && isJump == false)
                     {
                         Movement.jumpA(player);
-                        checkOfHight = 1;
-                        isJump = false;
+                        checkOfHight++;
+                        //isJump = true;
+                        if (checkOfHight >= hightOfJump)
+                        {
+                            checkOfHight = -1;
+                            isJump = !isJump;
+                        }
                     }
-                    Movement.gravitationA(player);
-                    checkOfHight--;
-
+                    else if (checkOfHight > 0)
+                    {
+                        Movement.jumpA(player);
+                        checkOfHight++;
+                        //isJump = true;
+                        if (checkOfHight >= hightOfJump)
+                        {
+                            checkOfHight = -1;
+                            isJump = false;
+                        }
+                    }
+                    else if (checkOfHight < 0 || !isIntersect)
+                    {
+                        if (isIntersect)
+                        {
+                            Movement.jumpA(player);
+                            checkOfHight = 1;
+                            isJump = false;
+                        }
+                        Movement.gravitationA(player);
+                        //checkOfHight--;
+                    }
+                }
+                else if (isFildJump)
+                {
+                    int remainHight = hightOfJump - checkOfHight;
+                    if (remainHight % 2 != 0)
+                    {
+                        remainHight--;
+                    }
+                    
+                    for (int i = 0; i < 15; i++)
+                    {
+                        plates[i].Move();
+                    }
+                    As(plates);
                 }
                 // передвижение платформ
-                flag = !flag;
+                //isFildJump = !isFildJump;
                 for (int i = 0; i < 15; i++)
                 {
-                    if (flag)
+                    if (isFildJump == true)
                     {
                         //plates[i].Move();
                     }
@@ -136,7 +160,7 @@ namespace DoodleJump
                     plates[i].Draw();
                     //plates[i].Intersect();
                 }
-                if (flag)
+                if (isFildJump == true)
                 {
                     //As(plates);
                 }
@@ -147,13 +171,26 @@ namespace DoodleJump
         {
             isGameOver = !isGameOver;
             Console.Clear();
-            Console.SetCursorPosition(15, 15);
-            Console.Write("GAME OVER");
+            Console.SetCursorPosition(37, 7);
+            Console.Write(" #####      ###    #     #  #######" + "\n"
+    + "                                     ##   ##    ## ##   ##   ##  ##     " + "\n"
+    + "                                     ##        ##   ##  ### ###  ##     " + "\n"
+    + "                                     ##  ###   ##   ##  #######  ######" + "\n"
+    + "                                     ##   ##   #######  ## # ##  ##     " + "\n"
+    + "                                     ##   ##   ##   ##  ##   ##  ##     " + "\n"
+    + "                                      #####    ##   ##  ##   ##  #######" + "\n" + "\n"
+    + "                                      #####    ##   ##  #######  ###### " + "\n"
+    + "                                     ##   ##   ##   ##  ##       ##   ##" + "\n"
+    + "                                     ##   ##   ##   ##  ##       ##   ##" + "\n"
+    + "                                     ##   ##   ##   ##  ######   ######" + "\n"
+    + "                                     ##   ##   ##   ##  ##       ## ##" + "\n"
+    + "                                     ##   ##    ## ##   ##       ##  ##" + "\n"
+    + "                                      #####      ###    #######  ##   ##");
         }
         static void As(Plate[] plates)
         {
             Random random = new Random();
-            int x = random.Next(4, 24);
+            int x = random.Next(4, 14);
             int texture = random.Next(0, 3);
             int direction = random.Next(0, 2);
             int y = 0;
@@ -209,7 +246,7 @@ namespace DoodleJump
             {
                 x = 0;
             }
-            if (y == 32)
+            if (y == 31)
             {
                 Game.GameOver();
             }
@@ -254,28 +291,12 @@ namespace DoodleJump
             player.Y++;
             player.Set();
         }
-        public static void jumpB(Plate[] plates)
+        public static void jumpB(Plate[] plates)//2
         {
             Random random = new Random();
-            int x = random.Next(4, 24);
+            int x = random.Next(4, 14);
             int texture = random.Next(0, 3);
             // int y = 0;
-            for (int i = 14; i > 0; i--)
-            {
-                plates[i] = plates[i - 1];
-            }
-            Plate plate = new Plate();
-            //plate.Spawn(x, y, texture);
-            plate.Draw();
-            plates[0] = plate;
-        }
-
-        public static void gravitationB(Plate[] plates)
-        {
-            Random random = new Random();
-            int x = random.Next(4, 24);
-            int texture = random.Next(0, 3);
-            //int y = 0;
             for (int i = 14; i > 0; i--)
             {
                 plates[i] = plates[i - 1];
@@ -293,6 +314,7 @@ namespace DoodleJump
         public string[] texturetipe = { "===", "---", "ߛߛߛ" };
         int x;
         int y;
+        int n = 0;
         string texture;
         bool isBreak;
         int direction;
@@ -307,10 +329,7 @@ namespace DoodleJump
             get { return y; }
         }
 
-        public void MovePossition()
-        {
-
-        }
+      
         public void Draw()
         {
             if (isBreak == false)
@@ -342,11 +361,15 @@ namespace DoodleJump
                 this.schet = this.x;
             }
         }
-        public bool Intersect(int x, int y)
+        public bool Intersect(int x, int y, int chechOfHight)
         {
+            if (texturetipe[1] == texture && (this.x == x || this.x + 1 == x || this.x + 2 == x) && this.y == y && chechOfHight < 0)
+            {
+                isBreak = true;
+            }
             if (isBreak == false)//платформа сломана?
             {
-                if ((this.x == x || this.x + 1 == x || this.x + 2 == x) && this.y == y)//пересечение игрока с платформой
+                if ((this.x == x || this.x + 1 == x || this.x + 2 == x) && this.y == y) //пересечение игрока с платформой
                 {
                     return true;
                 }
@@ -363,7 +386,7 @@ namespace DoodleJump
             {
                 this.x += this.direction;
                 this.schet += this.direction;
-                if (this.schet >= 27 || this.schet <= 1)
+                if (this.schet >= 12 || this.schet <= 1)
                 {
                     this.direction *= -1;
                 }
