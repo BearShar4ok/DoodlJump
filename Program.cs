@@ -13,27 +13,28 @@ namespace DoodleJump
         static void Main(string[] args)
         {
             Console.CursorVisible = false;
+            Console.BackgroundColor = Game.backGroundColor;
             Game.Start();
             Console.ReadLine();
         }
     }
-    static class Game
+    public static class Game
     {
-        //
-        public const int hightOfJump = 4;
+        //SETTINGS
+        public const int hightOfJump = 6;  // высота прыжка
         public static int checkOfHight = 0;
-
-        public static int plateNow;
-        public static int platePrevious;
-
+        public const ConsoleColor backGroundColor = ConsoleColor.Cyan;
+        public const ConsoleColor foreGroundColor = ConsoleColor.Black;
+        
+        //
         static bool isGameOver = false;
+        static long obshiySchet = 0;
         //
         public static void Start()
         {
             Console.OutputEncoding = Encoding.UTF8;
 
-            bool isFildJump = false;
-            bool isJump = false;
+            bool isFildJump;
 
             Random random = new Random();
             Console.Clear();
@@ -43,24 +44,34 @@ namespace DoodleJump
 
             Plate[] plates = new Plate[15];
             Plate[] dopPlates = new Plate[6];
-            platePrevious = plates.Length - 1;
-            plateNow = platePrevious;
 
             // СПАВН НА СТАРТЕ
             for (int i = 0; i < 30; i += 2) // заполнение памяти 15 платформ
             {
                 int x = random.Next(4, 14);
-                int texture = random.Next(0, 3);
+                int texture = random.Next(0, 11);
+                if (texture >=0 && texture <= 5)
+                {
+                    texture = 0; //===
+                }
+                else if (texture >= 6 && texture <= 8)
+                {
+                    texture = 2;//ߛߛߛ
+                }
+                else
+                {             
+                    texture = 1;//---   
+                }
                 int y = i;
                 int direction = random.Next(0, 2);
                 Plate plate = new Plate();
                 plate.Spawn(x, y, texture, direction);
                 plates[i / 2] = plate;
 
-                if (i == 14)
+                if (i == 24)
                 {
-                    playerX = x;
-                    playerY = 13;
+                    playerX = x + 1;
+                    playerY = 23;
                 }
             }
 
@@ -72,6 +83,8 @@ namespace DoodleJump
             //игра. обновление экрана => сама игра
             while (!isGameOver)
             {
+                Schet();
+                Console.BackgroundColor = backGroundColor;
                 Thread.Sleep(50);
                 Console.Clear();
                 if (Console.KeyAvailable == true)
@@ -79,97 +92,71 @@ namespace DoodleJump
                     ConsoleKey a = Console.ReadKey(true).Key;
                     Movement.personalMove(player, a);
                 }
-                player.Set();
                 bool isIntersect = false;
                 for (int j = 0; j < plates.Length; j++)
                 {
                     if (plates[j].Intersect(player.X, player.Y + 1, checkOfHight))
                     {
-                        plateNow = j;
                         isIntersect = true;
-                        if (plateNow == platePrevious)
-                        {
-                            isFildJump = false;
-                        }
-                        else
-                        {
-                            isFildJump = false;
-                        }
                         break;
                     }
                 }
-                if (!isFildJump)
+                // двигать экран или игрока
+                if (player.Y <= 15) 
                 {
-                    if (isIntersect && isJump == false)
-                    {
-                        Movement.jumpA(player);
-                        checkOfHight++;
-                        //isJump = true;
-                        if (checkOfHight >= hightOfJump)
-                        {
-                            checkOfHight = -1;
-                            isJump = !isJump;
-                        }
-                    }
-                    else if (checkOfHight > 0)
-                    {
-                        Movement.jumpA(player);
-                        checkOfHight++;
-                        //isJump = true;
-                        if (checkOfHight >= hightOfJump)
-                        {
-                            checkOfHight = -1;
-                            isJump = false;
-                        }
-                    }
-                    else if (checkOfHight < 0 || !isIntersect)
-                    {
-                        if (isIntersect)
-                        {
-                            Movement.jumpA(player);
-                            checkOfHight = 1;
-                            isJump = false;
-                        }
-                        Movement.gravitationA(player);
-                        //checkOfHight--;
-                    }
+                    isFildJump = true;
                 }
-                else if (isFildJump)
+                else
                 {
-                    int remainHight = hightOfJump - checkOfHight;
-                    if (remainHight % 2 != 0)
-                    {
-                        remainHight--;
-                    }
-                    
+                    isFildJump = false;
+                }
+                // само перемещение экрана или игрока
+                if (!isFildJump)//перемещение игрока
+                {
+                    Movement.Physic(player, isIntersect, ref checkOfHight, hightOfJump);
+                }
+                else if (isFildJump)//перемещение экрана
+                {
+                    obshiySchet+=2;
                     for (int i = 0; i < 15; i++)
                     {
                         plates[i].Move();
                     }
-                    As(plates);
+                    Movement.jumpB(plates);
+                    Movement.gravitationA(player);
                 }
                 // передвижение платформ
-                //isFildJump = !isFildJump;
+                
                 for (int i = 0; i < 15; i++)
                 {
-                    if (isFildJump == true)
-                    {
-                        //plates[i].Move();
-                    }
+                    
                     plates[i].MoveXPlate();
+                    DrawBorder();
                     plates[i].Draw();
-                    //plates[i].Intersect();
+                    
                 }
-                if (isFildJump == true)
-                {
-                    //As(plates);
-                }
+                
+                isFildJump = false;
             }
             GameOver();
         }
+        static void DrawBorder()
+        {
+            for (int i = 0; i < 30; i++)
+            {
+                Console.SetCursorPosition(16, i);
+                Console.Write("|");
+                
+            }
+        }
+        static void Schet()
+        {
+            Console.SetCursorPosition(30, 0);
+            Console.Write("Ваш счет: "+obshiySchet);
+        }
         public static void GameOver()
         {
-            isGameOver = !isGameOver;
+            isGameOver = true;
             Console.Clear();
             Console.SetCursorPosition(37, 7);
             Console.Write(" #####      ###    #     #  #######" + "\n"
@@ -186,22 +173,7 @@ namespace DoodleJump
     + "                                     ##   ##   ##   ##  ##       ## ##" + "\n"
     + "                                     ##   ##    ## ##   ##       ##  ##" + "\n"
     + "                                      #####      ###    #######  ##   ##");
-        }
-        static void As(Plate[] plates)
-        {
-            Random random = new Random();
-            int x = random.Next(4, 14);
-            int texture = random.Next(0, 3);
-            int direction = random.Next(0, 2);
-            int y = 0;
-            for (int i = 14; i > 0; i--)
-            {
-                plates[i] = plates[i - 1];
-            }
-            Plate plate = new Plate();
-            plate.Spawn(x, y, texture, direction);
-            plate.Draw();
-            plates[0] = plate;
+            Schet();
         }
     }
 
@@ -210,7 +182,7 @@ namespace DoodleJump
     {
         private int x;
         private int y;
-
+        private ConsoleColor playerColor = ConsoleColor.Red;
         private char texture = '0';
 
         public int X
@@ -240,9 +212,9 @@ namespace DoodleJump
         {
             if (x == -1)
             {
-                x = 30;
+                x = 15;
             }
-            else if (x == 31)
+            else if (x == 16)
             {
                 x = 0;
             }
@@ -251,35 +223,64 @@ namespace DoodleJump
                 Game.GameOver();
             }
             Console.SetCursorPosition(x, y);
+            Console.ForegroundColor = playerColor;
+            Console.BackgroundColor = Game.backGroundColor;
             Console.Write(texture);
+            Console.ResetColor();
         }
     }
 
     static class Movement
     {
+        public static void Physic(Player player, bool isIntersect, ref int checkOfHight, int hightOfJump)
+        {
+            if (isIntersect && checkOfHight < 0)
+            {
+                checkOfHight++;
+                jumpA(player);
+            }
+            else if (checkOfHight >= 0)
+            {
+                checkOfHight++;
+                jumpA(player);
+            
+                if (checkOfHight >= hightOfJump)
+                {
+                    checkOfHight = -1;
+                }
+            }
+            else
+            {
+                gravitationA(player);
+            }
+        }
         public static void personalMove(Player player, ConsoleKey key)
         {
             if (key == ConsoleKey.D)
             {
                 Console.SetCursorPosition(player.X, player.Y);
+                Console.ForegroundColor = Game.backGroundColor;
                 Console.Write(" ");
+                Console.ForegroundColor = Game.foreGroundColor;
                 player.X++;
                 player.Set();
             }
             if (key == ConsoleKey.A)
             {
                 Console.SetCursorPosition(player.X, player.Y);
+                Console.ForegroundColor = Game.backGroundColor;
                 Console.Write(" ");
+                Console.ForegroundColor = Game.foreGroundColor;
                 player.X--;
-                Console.SetCursorPosition(player.X + 2, player.Y);
-                Console.Write(" ");
                 player.Set();
             }
         }
         public static void jumpA(Player player)
         {
             Console.SetCursorPosition(player.X, player.Y);
+            Console.BackgroundColor = Game.backGroundColor;
             Console.Write(" ");
+            Console.BackgroundColor = Game.foreGroundColor;
             player.Y--;
             player.Set();
         }
@@ -287,7 +288,9 @@ namespace DoodleJump
         public static void gravitationA(Player player)
         {
             Console.SetCursorPosition(player.X, player.Y);
+            Console.BackgroundColor = Game.backGroundColor;
             Console.Write(" ");
+            Console.BackgroundColor = Game.foreGroundColor;
             player.Y++;
             player.Set();
         }
@@ -296,13 +299,14 @@ namespace DoodleJump
             Random random = new Random();
             int x = random.Next(4, 14);
             int texture = random.Next(0, 3);
-            // int y = 0;
+            int direction = random.Next(0, 2);
+            int y = 0;
             for (int i = 14; i > 0; i--)
             {
                 plates[i] = plates[i - 1];
             }
             Plate plate = new Plate();
-            //plate.Spawn(x, y, texture);
+            plate.Spawn(x, y, texture, direction);
             plate.Draw();
             plates[0] = plate;
         }
@@ -311,7 +315,7 @@ namespace DoodleJump
     class Plate
     {
         //U+07DB
-        public string[] texturetipe = { "===", "---", "ߛߛߛ" };
+        public string[] texturetipe = { "===", "‾‾‾", "ߛߛߛ" };
         int x;
         int y;
         int n = 0;
@@ -335,6 +339,8 @@ namespace DoodleJump
             if (isBreak == false)
             {
                 Console.SetCursorPosition(this.x, this.y);
+                Console.BackgroundColor = Game.backGroundColor;
+                Console.ForegroundColor = Game.foreGroundColor;
                 Console.Write(texture);
             }
         }
@@ -345,6 +351,8 @@ namespace DoodleJump
             this.y = y;
             this.isBreak = false;
             Console.SetCursorPosition(this.x, this.y);
+            Console.BackgroundColor = Game.backGroundColor;
+            Console.ForegroundColor = Game.foreGroundColor;
             this.texture = texturetipe[textureNumber];
             if (textureNumber == 2)
             {
@@ -388,6 +396,14 @@ namespace DoodleJump
                 this.schet += this.direction;
                 if (this.schet >= 12 || this.schet <= 1)
                 {
+                    if (this.schet > 12)
+                    {
+                        this.schet = 12;
+                    }
+                    if (this.schet < 1) 
+                    { 
+                        this.schet = 1;
+                    }
                     this.direction *= -1;
                 }
             }
