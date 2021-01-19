@@ -481,6 +481,7 @@ namespace DoodleJump
             Console.ResetColor();
             Menu.Spawn();
             Menu.Up = true;
+            obshiySchet = 0;
         }
         static void DrawBorder()
         {
@@ -517,6 +518,7 @@ namespace DoodleJump
     + "                                      #####      ###    #######  ##   ##");
             Console.SetCursorPosition(50, 0);
             Console.Write("Ваш счет: " + obshiySchet);
+            
             Console.SetCursorPosition(0, 1);
         }
     }
