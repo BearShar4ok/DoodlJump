@@ -1,0 +1,7 @@
+D:\Программирование\C#2\DoodlJamp\DoodlJamp\bin\Debug\DoodlJamp.exe.config
+D:\Программирование\C#2\DoodlJamp\DoodlJamp\bin\Debug\DoodlJamp.exe
+D:\Программирование\C#2\DoodlJamp\DoodlJamp\bin\Debug\DoodlJamp.pdb
+D:\Программирование\C#2\DoodlJamp\DoodlJamp\obj\Debug\DoodlJamp.csprojAssemblyReference.cache
+D:\Программирование\C#2\DoodlJamp\DoodlJamp\obj\Debug\DoodlJamp.csproj.CoreCompileInputs.cache
+D:\Программирование\C#2\DoodlJamp\DoodlJamp\obj\Debug\DoodlJamp.exe
+D:\Программирование\C#2\DoodlJamp\DoodlJamp\obj\Debug\DoodlJamp.pdb
